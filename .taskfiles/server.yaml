@@ -1,0 +1,79 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+vars:
+  PORT: 3001
+
+tasks:
+  init:
+    desc: Initialize
+    cmd:
+      task: setup
+
+  setup:
+    desc: Setup server
+    cmds:
+      - docker-compose pull
+      # FIXME:
+      - echo "Add setup here"
+
+  setup-ci:
+    desc: Setup in CI
+    cmd: bun ci
+
+  start:
+    desc: Start
+    deps:
+      - compose:services
+    # FIXME:
+    cmd: echo "Start server here"
+
+  kill:
+    desc: Kill server
+    cmd: lsof -t -i tcp:${SERVER_PORT:-{{.PORT}}} | xargs kill
+
+  check:
+    desc: Run checks
+    cmds:
+      # FIXME:
+      - echo "Run server checks here"
+
+  fix:
+    desc: Fix checks
+    # FIXME:
+    cmd: echo "format and fix server code"
+
+  test:
+    desc: Run tests
+    # FIXME:
+    cmd: echo "Run server tests here"
+
+  reset:
+    desc: Reset
+    cmds:
+      # FIXME:
+      - echo "Delete build artifacts and re-run"
+
+  compose:build:
+    desc: Build Docker Compose server
+    cmd: docker-compose --profile server build
+
+  compose:up:
+    aliases: [compose:start, compose:run]
+    desc: Run Docker Compose server
+    cmd: docker-compose --profile server up -d --force-recreate{{if .CLI_FORCE}} --build{{end}}
+
+  compose:down:
+    desc: Down Docker Compose server
+    cmd: docker-compose --profile server down
+
+  compose:services:
+    aliases: [compose:services:up]
+    desc: Start services
+    cmd: docker-compose --profile services up -d{{if .CLI_FORCE}} --force-recreate{{end}}
+
+  compose:services:down:
+    desc: Start services
+    cmds:
+      - docker-compose --profile services down

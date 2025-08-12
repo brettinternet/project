@@ -1,0 +1,44 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+vars:
+  PORT: 3000
+
+tasks:
+  init:
+    desc: Initialize the project client
+    cmd:
+      task: setup
+
+  setup:
+    desc: Setup the project client
+    cmd: bun install
+
+  setup-ci:
+    desc: Setup the project client in CI
+    cmd: bun ci
+
+  start:
+    desc: Start dev server
+    cmd: bun run start
+
+  kill:
+    desc: Kill process running on client port
+    cmd: lsof -t -i tcp:${CLIENT_PORT:-{{.PORT}}} | xargs kill
+
+  check:
+    desc: Run client checks
+    cmd: bun run check
+
+  fix:
+    desc: Fix client checks
+    cmd: bun run fix
+
+  build:
+    desc: Build client library
+    cmd: bun run build
+
+  test:
+    desc: Run client tests
+    cmd: bun run test

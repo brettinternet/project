@@ -1,0 +1,79 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/docker/cli/master/cli/compose/schema/data/config_schema_v3.13.json
+x-options: &options
+  tty: true
+  networks: [default]
+  env_file: .env
+  environment: &environment
+    TZ: '${TIMEZONE:-America/Denver}'
+  deploy: &deploy
+    restart_policy:
+      condition: unless-stopped
+
+services:
+  traefik:
+    <<: *options
+    image: traefik:v3.5
+    profiles: [services]
+    command:
+      - --log.level=INFO
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.file.directory=/etc/traefik
+      - --providers.file.watch=true
+      - --entrypoints.web.address=:80
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - 80:80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker/traefik:/etc/traefik
+    labels:
+      traefik.enable: 'true'
+      traefik.http.routers.traefik-dashboard.rule: Host(`traefik.${DOMAIN}`)
+      traefik.http.routers.traefik-dashboard.service: traefik-dashboard-service
+      traefik.http.routers.traefik-dashboard.entrypoints: web
+      traefik.http.services.traefik-dashboard-service.loadbalancer.server.port: 8080
+
+  postgres:
+    <<: *options
+    image: postgres:17-alpine
+    profiles: [services]
+    environment:
+      <<: *environment
+      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGOPTIONS: -c log_statement=all
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+    volumes:
+      - ./docker/postgres/initdb.d:/docker-entrypoint-initdb.d
+      - ./docker/data/postgres:/var/lib/postgresql/data
+
+  pgadmin:
+    <<: *options
+    depends_on:
+      - postgres
+    image: dpage/pgadmin4:latest
+    profiles: [services]
+    environment:
+      <<: *environment
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-postgres}
+      PGADMIN_DISABLE_POSTFIX: 'True'
+      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      PGADMIN_CONFIG_CHECK_EMAIL_DELIVERABILITY: 'False'
+    volumes:
+      - ./docker/data/pgadmin:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json
+    labels:
+      traefik.enable: 'true'
+      traefik.http.routers.pgadmin.rule: Host(`pgadmin.${DOMAIN}`)
+      traefik.http.routers.pgadmin.entrypoints: web
+      traefik.http.services.pgadmin.loadbalancer.server.port: 80

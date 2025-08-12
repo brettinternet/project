@@ -1,0 +1,11 @@
+[tools]
+bun = "latest"
+dotenv = "latest"
+dprint = "latest"
+gitleaks = "latest"
+lefthook = "latest"
+task = "latest"
+
+[settings]
+disable_backends = ["asdf"]
+npm.bun = true

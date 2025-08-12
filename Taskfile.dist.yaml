@@ -1,0 +1,76 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+dotenv: [.env]
+
+includes:
+  setup: .taskfiles/setup.yaml
+  server: .taskfiles/server.yaml
+  client:
+    dir: client
+    taskfile: .taskfiles/client.yaml
+
+tasks:
+  default:
+    silent: true
+    cmd: task -l
+
+  init:
+    desc: Install dependencies and setup environment
+    aliases: [setup]
+    deps:
+      - task: setup:init
+    cmds:
+      - task: server:init
+      - task: client:init
+
+  check:
+    desc: Run all checks
+    deps:
+      - task: server:check
+      - task: client:check
+    cmds:
+      - dprint check
+
+  fix:
+    desc: Run all fixes
+    deps:
+      - task: server:fix
+      - task: client:fix
+    cmds:
+      - dprint fmt
+
+  test:
+    desc: Run all tests
+    deps:
+      - task: server:test
+      - task: client:test
+
+  compose:up:
+    aliases: [up]
+    desc: Start all services
+    deps:
+      - server:compose:services
+    cmds:
+      - task: server:compose:up
+      - task: client:compose:up
+
+  compose:services:
+    aliases: [compose:services:up]
+    desc: Start services
+    deps:
+      - server:compose:services
+
+  compose:services:down:
+    desc: Down services
+    deps:
+      - server:compose:services:down
+
+  compose:down:
+    aliases: [down]
+    desc: Down services
+    deps:
+      - server:compose:services:down
+      - server:compose:down
+      - client:compose:down

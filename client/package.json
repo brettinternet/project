@@ -1,0 +1,17 @@
+{
+  "name": "app",
+  "private": true,
+  "scripts": {
+    "start": "echo 'FIXME: Start here'",
+    "check": "biome check && tsc --noEmit",
+    "fix": "biome check --write",
+    "test": "bun run test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.0.6",
+    "@types/node": "^22.16.0",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "bun@1.2.18",
+  "dependencies": {}
+}
