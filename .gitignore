@@ -17,4 +17,5 @@ mise.*.local.toml
 CLAUDE.local.md
 GEMINI.local.md
 
+# Client
 node_modules
