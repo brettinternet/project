@@ -5,7 +5,7 @@ x-options: &options
   networks: [default]
   env_file: .env
   environment: &environment
-    TZ: '${TIMEZONE:-America/Denver}'
+    TZ: "${TIMEZONE:-America/Denver}"
   deploy: &deploy
     restart_policy:
       condition: unless-stopped
@@ -31,7 +31,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./docker/traefik:/etc/traefik
     labels:
-      traefik.enable: 'true'
+      traefik.enable: "true"
       traefik.http.routers.traefik-dashboard.rule: Host(`traefik.${DOMAIN}`)
       traefik.http.routers.traefik-dashboard.service: traefik-dashboard-service
       traefik.http.routers.traefik-dashboard.entrypoints: web
@@ -64,16 +64,16 @@ services:
       <<: *environment
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-postgres}
-      PGADMIN_DISABLE_POSTFIX: 'True'
+      PGADMIN_DISABLE_POSTFIX: "True"
       PGADMIN_LISTEN_ADDRESS: 0.0.0.0
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
-      PGADMIN_CONFIG_CHECK_EMAIL_DELIVERABILITY: 'False'
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_CONFIG_CHECK_EMAIL_DELIVERABILITY: "False"
     volumes:
       - ./docker/data/pgadmin:/var/lib/pgadmin
       - ./docker/pgadmin/servers.json:/pgadmin4/servers.json
     labels:
-      traefik.enable: 'true'
+      traefik.enable: "true"
       traefik.http.routers.pgadmin.rule: Host(`pgadmin.${DOMAIN}`)
       traefik.http.routers.pgadmin.entrypoints: web
       traefik.http.services.pgadmin.loadbalancer.server.port: 80
