@@ -19,3 +19,6 @@ GEMINI.local.md
 
 # Client
 node_modules
+
+# System
+.DS_Store
