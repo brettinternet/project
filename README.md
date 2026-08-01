@@ -8,6 +8,7 @@
 - .env
 - direnv
 - lefthook
+- Prettier
 
 ## Usage
 
@@ -18,6 +19,16 @@ Initialize and setup dependencies.
 ```sh
 task init
 ```
+
+### Checks
+
+Run the staged pre-commit gate before committing:
+
+```sh
+task check:staged
+```
+
+`task check` runs the full project check suite.
 
 #### DNS
 
