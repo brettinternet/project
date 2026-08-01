@@ -2,7 +2,7 @@
 bun = "latest"
 direnv = "latest"
 dotenvx = "latest"
-dprint = "latest"
+prettier = "latest"
 gitleaks = "latest"
 lefthook = "latest"
 task = "latest"

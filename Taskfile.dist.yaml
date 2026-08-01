@@ -26,20 +26,33 @@ tasks:
       - task: client:init
 
   check:
-    desc: Run all checks
+    desc: Run all project checks
     deps:
       - task: server:check
       - task: client:check
     cmds:
-      - dprint check
+      - mise exec prettier -- prettier --check .
+
+  check:staged:
+    desc: Run checks only for staged files
+    aliases: [check-staged]
+    cmd: mise exec lefthook -- lefthook run pre-commit
+
+  format:staged:
+    desc: Check Prettier formatting only for staged files
+    cmds:
+      - |
+        files=$(git -C {{.ROOT_DIR}} diff --cached --name-only --diff-filter=ACMR -- '*.css' '*.graphql' '*.html' '*.json' '*.json5' '*.jsonc' '*.js' '*.jsx' '*.md' '*.mdx' '*.ts' '*.tsx' '*.yaml' '*.yml' | sort -u)
+        if [ -z "$files" ]; then exit 0; fi
+        echo "$files" | xargs mise exec prettier -- prettier --check
 
   fix:
-    desc: Run all fixes
+    desc: Fix all project files
     deps:
       - task: server:fix
       - task: client:fix
     cmds:
-      - dprint fmt
+      - mise exec prettier -- prettier --write .
 
   test:
     desc: Run all tests

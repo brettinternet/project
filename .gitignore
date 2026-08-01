@@ -11,11 +11,15 @@ docker/app/secrets
 mise.local.toml
 mise.*.local.toml
 
+# Git worktrees
+/.worktrees/
+
 # AI
 .claude/settings.local.json
 .opencode/
 CLAUDE.local.md
 GEMINI.local.md
+AGENTS.local.md
 
 # Client
 node_modules

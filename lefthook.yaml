@@ -4,7 +4,7 @@
 pre-commit:
   parallel: true
   jobs:
-    - name: Run checks
-      run: task check
+    - name: Check staged formatting
+      run: mise exec task -- task format:staged
     - name: Check for secret leaks
-      run: gitleaks git --pre-commit --redact --staged --verbose --no-banner
+      run: mise exec gitleaks -- gitleaks git --pre-commit --redact --staged --verbose --no-banner
