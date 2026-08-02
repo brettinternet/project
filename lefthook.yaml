@@ -6,5 +6,7 @@ pre-commit:
   jobs:
     - name: Check staged formatting
       run: mise exec prettier -- prettier --check --ignore-unknown -- {staged_files}
+      exclude:
+        - CLAUDE.md
     - name: Check for secret leaks
       run: mise exec gitleaks -- gitleaks git --pre-commit --redact --staged --verbose --no-banner
