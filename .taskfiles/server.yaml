@@ -20,7 +20,7 @@ tasks:
 
   setup-ci:
     desc: Setup in CI
-    cmd: bun ci
+    cmd: echo "Add server CI setup here"
 
   start:
     desc: Start

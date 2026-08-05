@@ -35,10 +35,6 @@ tasks:
     desc: Fix client checks
     cmd: bun run fix
 
-  build:
-    desc: Build client library
-    cmd: bun run build
-
   test:
     desc: Run client tests
     cmd: bun run test
