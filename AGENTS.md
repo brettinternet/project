@@ -1,6 +1,6 @@
 @AGENTS.local.md
 
-# Agent instructions
+# Agents
 
 ## Tooling
 
