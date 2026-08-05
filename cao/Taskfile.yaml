@@ -1,0 +1,126 @@
+version: "3"
+
+vars:
+  CAO_HOME: "{{.TASKFILE_DIR}}/../.cao/home"
+
+env:
+  CAO_API_PORT: "9889"
+  CAO_API_URL: "http://127.0.0.1:9889"
+  CAO_HOME_DIR: "{{.CAO_HOME}}/.aws/cli-agent-orchestrator"
+
+tasks:
+  check:
+    desc: Validate CAO scripts, flows, profiles, and deterministic tests
+    cmds:
+      - bash -n scripts/*.sh flows/*.sh
+      - task: test
+      - task: check:profiles
+
+  check:profiles:
+    desc: Validate the agent profiles when CAO is installed
+    silent: true
+    cmd: |
+      if ! command -v cao >/dev/null; then
+        echo "cao is not installed; skipping profile validation (run task cao:install)"
+        exit 0
+      fi
+      for profile in agents/*.md; do
+        cao profile validate "$profile"
+      done
+
+  test:
+    desc: Run CAO deterministic tests
+    cmd: python3 -m unittest discover -s tests -p 'test_*.py'
+
+  build:
+    desc: CAO scripts have no separate build artifact
+    cmd: "true"
+
+  fix:
+    desc: CAO formatting is handled by the root formatter
+    cmd: "true"
+
+  install:
+    desc: Install CAO and the project agent profiles
+    cmds:
+      - mise exec -- uv tool install cli-agent-orchestrator==2.4.1 --reinstall
+      - cao install agents/project-driver.md --provider claude_code
+      - cao install agents/project-implementer.md --provider codex
+      - cao install agents/project-verifier.md --provider opencode_cli
+
+  init:
+    desc: Install CAO, start the local server, and enable project schedules
+    deps: [up]
+
+  server:start:
+    desc: Start the local CAO server
+    deps: [install]
+    cmds:
+      - |
+        mkdir -p ../.cao
+        if ! curl -fsS --max-time 2 "${CAO_API_URL}/sessions" >/dev/null; then
+          cao-server --host 127.0.0.1 --port "${CAO_API_PORT}" </dev/null >../.cao/server.log 2>&1 &
+          for _ in $(seq 1 30); do
+            curl -fsS --max-time 2 "${CAO_API_URL}/sessions" >/dev/null && break
+            sleep 1
+          done
+          curl -fsS --max-time 2 "${CAO_API_URL}/sessions" >/dev/null
+          pid=$(lsof -ti "TCP:${CAO_API_PORT}" -sTCP:LISTEN | sed -n '1p')
+          case "$pid" in ''|*[!0-9]*) exit 1;; esac
+          echo "$pid" >../.cao/server.pid
+        fi
+
+  dashboard:
+    desc: Open the local CAO dashboard
+    deps: [server:start]
+    cmd: open "${CAO_API_URL}"
+
+  up:
+    desc: Enable the project poller and reaper schedules
+    deps: [server:start]
+    cmds:
+      - cao schedule remove backlog-poller || true
+      - cao schedule remove reaper || true
+      - cao schedule add flows/backlog-poller.md
+      - cao schedule add flows/reaper.md
+      - cao schedule enable backlog-poller
+      - cao schedule enable reaper
+
+  down:
+    desc: Stop CAO sessions and this project's CAO server
+    cmds:
+      - cao shutdown --all || true
+      - |
+        if [ -f ../.cao/server.pid ]; then
+          pid=$(cat ../.cao/server.pid)
+          case "$pid" in
+            ''|*[!0-9]*) ;;
+            *) if ps -p "$pid" -o command= | grep -q '[c]ao-server'; then /bin/kill "$pid"; fi ;;
+          esac
+          trash ../.cao/server.pid
+        fi
+
+  next:
+    desc: Show the next dependency-ready backlog task without mutating state
+    cmd: ./scripts/tracker.sh next
+  status:
+    desc: Show CAO schedules, sessions, and runtime-flow health
+    cmds:
+      - cao schedule list
+      - cao session list --json
+      - |
+        log=../.cao/server.log
+        if ! curl -fsS --max-time 2 "${CAO_API_URL}/health" >/dev/null; then
+          printf '%s\n' "CAO runtime health: FAILED (API unavailable)"
+          exit 1
+        fi
+        if [ ! -f "$log" ]; then
+          printf '%s\n' "CAO runtime health: FAILED (server log missing)"
+          exit 1
+        fi
+        failure=$(grep -E "ERROR - Flow (reaper|backlog-poller) failed" "$log" | tail -n 1 || true)
+        if [ -n "$failure" ]; then
+          printf '%s\n%s\n' "CAO runtime health: FAILED (scheduled-flow error)" "$failure"
+          exit 1
+        fi
+        printf '%s\n' "CAO runtime health: OK"

@@ -10,6 +10,9 @@ includes:
   client:
     dir: client
     taskfile: .taskfiles/client.yaml
+  cao:
+    dir: cao
+    taskfile: cao/Taskfile.yaml
 
 tasks:
   default:
@@ -25,11 +28,42 @@ tasks:
       - task: server:init
       - task: client:init
 
+  ci:
+    desc: The gate. Everything that must pass before a backlog task is Done.
+    cmds:
+      - task: check
+      - task: test
+
+  backlog:
+    desc: Show the committed Backlog.md work queue
+    cmd: ./cao/scripts/tracker.sh list --plain
+
+  standup:
+    desc: Autonomous loop work and owner needs
+    silent: true
+    cmds:
+      - 'echo "-- committed since yesterday --"'
+      - git log --oneline --since=yesterday main || true
+      - 'echo "-- done --"'
+      - ./cao/scripts/tracker.sh list --status Done --plain || true
+      - 'echo "-- in progress --"'
+      - ./cao/scripts/tracker.sh list --status "In Progress" --plain || true
+      - 'echo "-- blocked: an external change is required --"'
+      - ./cao/scripts/tracker.sh list -l blocked --plain || true
+      - 'echo "-- needs you: only the owner can finish these --"'
+      - ./cao/scripts/tracker.sh list -l human --plain || true
+      - 'echo "-- escalated: a workflow gave up, you decide --"'
+      - ./cao/scripts/tracker.sh list -l escalated --plain || true
+      - 'echo "-- gate --"'
+      - |
+        task ci >/dev/null 2>&1 && echo "gate: green" || echo "gate: RED"
+
   check:
     desc: Run all project checks
     deps:
       - task: server:check
       - task: client:check
+      - task: cao:check
     cmds:
       - mise exec prettier -- prettier --check .
 
@@ -51,6 +85,7 @@ tasks:
     deps:
       - task: server:test
       - task: client:test
+      - task: cao:test
 
   compose:up:
     aliases: [up]

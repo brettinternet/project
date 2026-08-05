@@ -8,11 +8,26 @@ docker/app/secrets
 # Tools
 /Taskfile.yaml
 /Taskfile.yml
+# A global ignore of unanchored `Taskfile.yaml` would also swallow committed
+# per-area Taskfiles, and a missing cao/Taskfile.yaml breaks `task ci` inside an
+# attempt worktree. Only the root override is local.
+!cao/Taskfile.yaml
 mise.local.toml
 mise.*.local.toml
 
-# Git worktrees
+# CAO runtime state: repository lock, CAO home, per-attempt work, checkpoints.
+# Machine-local by design.
+/.cao/
+
+# Per-attempt Git worktrees. Ignored in the repository rather than only in a
+# machine-local excludes file, because cao/scripts/repo-state.sh reads the tree
+# with core.excludesFile=/dev/null and would otherwise count an attempt's own
+# worktree as untracked project content.
 /.worktrees/
+
+# Python bytecode from the CAO scripts and tests
+__pycache__/
+*.pyc
 
 # AI
 .claude/settings.local.json

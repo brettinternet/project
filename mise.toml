@@ -4,8 +4,14 @@ direnv = "latest"
 dotenvx = "latest"
 prettier = "latest"
 gitleaks = "latest"
+jq = "latest"
 lefthook = "latest"
 task = "latest"
+uv = "latest"
+
+# Backlog.md is the committed work queue the CAO pattern in cao/ drives. Pinned
+# because cao/scripts/tracker.sh depends on its `--json` task/list shapes.
+"github:MrLesk/Backlog.md" = { version = "1.49.3", bin = "backlog" }
 
 [settings]
 disable_backends = ["asdf"]

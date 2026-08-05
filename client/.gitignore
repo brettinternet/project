@@ -1,0 +1,4 @@
+# Biome resolves ignore files relative to this directory. In a Git worktree
+# `.git` is a file, so it cannot find the repository root and requires a local
+# ignore file. CAO finalization runs `task ci` inside an attempt worktree.
+node_modules
