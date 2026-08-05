@@ -9,7 +9,8 @@
 - direnv
 - lefthook
 - Prettier
-- Backlog.md work queue driven by a CAO agent loop
+- cao
+- backlog.md
 
 ## Usage
 
