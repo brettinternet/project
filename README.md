@@ -6,6 +6,7 @@
 - Taskfile
 - docker
 - .env
+- Varlock
 - direnv
 - lefthook
 - Prettier
@@ -21,6 +22,12 @@ Initialize and setup dependencies.
 ```sh
 task init
 ```
+
+`.env.schema` is the committed source of environment defaults and metadata.
+`task init` copies it to the ignored `.env`; direnv loads that file for local
+commands. Mark secret entries with `# @sensitive`. The pre-commit gate combines
+Gitleaks' generic detection with `varlock scan --staged`, which catches the
+project's configured secret values.
 
 ### Checks
 

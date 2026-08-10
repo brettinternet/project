@@ -23,7 +23,7 @@ tasks:
   create-env-file:
     desc: Create local environment variable file
     cmds:
-      - cp example.env .env
+      - cp .env.schema .env
     status:
       - test -f .env
 
