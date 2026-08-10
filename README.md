@@ -23,11 +23,52 @@ Initialize and setup dependencies.
 task init
 ```
 
-`.env.schema` is the committed source of environment defaults and metadata.
-`task init` copies it to the ignored `.env`; direnv loads that file for local
-commands. Mark secret entries with `# @sensitive`. The pre-commit gate combines
-Gitleaks' generic detection with `varlock scan --staged`, which catches the
-project's configured secret values.
+Use the ecosystem-standard environment file names; do not create
+`.env.public` or `.env.secret`. Sensitivity is declared per variable in the
+schema rather than implied by a filename.
+
+| File          | Git       | Purpose                                                    |
+| ------------- | --------- | ---------------------------------------------------------- |
+| `.env.schema` | committed | Varlock contract, validation, and non-secret defaults      |
+| `.env`        | ignored   | Non-secret local values for dotenv-compatible tools        |
+| `.env.local`  | ignored   | Local overrides and device-bound encrypted secret payloads |
+
+`task init` creates both ignored files and validates the resolved environment.
+Direnv and Task load only `.env`; use `varlock run` to expose `.env.local`
+secrets only to the command that needs them.
+
+Declare each secret in `.env.schema`:
+
+```dotenv
+# @sensitive @required
+API_KEY=
+```
+
+Then add a prompt resolver to `.env.local` and resolve it:
+
+```dotenv
+API_KEY=varlock(prompt)
+```
+
+```sh
+task setup:env:check
+```
+
+Varlock replaces the prompt with a device-bound encrypted payload. To encrypt
+one value manually, run `task setup:env:encrypt` and paste the generated
+reference into `.env.local`. Run secret-bearing commands without exporting
+secrets into the development shell:
+
+```sh
+# Interactively encrypt one value
+task setup:env:encrypt
+task setup:env:run -- task compose:up
+task setup:env:lock
+```
+
+The pre-commit gate combines Gitleaks' generic detection with
+`varlock scan --staged`, which checks staged files for configured secret
+values. On macOS, resolving locally encrypted values may request Touch ID.
 
 ### Checks
 

@@ -7,7 +7,7 @@ tasks:
     desc: Install dependencies
     cmds:
       - task: mise
-      - task: create-env-file
+      - task: env:init
       - task: direnv
       - task: lefthook
 
@@ -20,12 +20,43 @@ tasks:
       - sh: command -v mise
         msg: Mise is not installed
 
+  env:init:
+    desc: Create and validate local environment files
+    cmds:
+      - task: create-env-file
+      - task: create-env-local-file
+      - task: env:check
+
   create-env-file:
-    desc: Create local environment variable file
+    internal: true
+    desc: Create non-secret local environment file
     cmds:
       - cp .env.schema .env
     status:
       - test -f .env
+
+  create-env-local-file:
+    internal: true
+    cmds:
+      - touch .env.local
+    status:
+      - test -f .env.local
+
+  env:check:
+    desc: Validate and resolve the Varlock environment
+    cmd: mise exec varlock -- varlock load --show-all
+
+  env:encrypt:
+    desc: Encrypt one value for use in .env.local
+    cmd: mise exec varlock -- varlock encrypt
+
+  env:run:
+    desc: Run a command with scoped Varlock environment values
+    cmd: mise exec varlock -- varlock run -- {{.CLI_ARGS}}
+
+  env:lock:
+    desc: Lock the Varlock local encryption session
+    cmd: mise exec varlock -- varlock lock
 
   direnv:
     desc: Run direnv hooks

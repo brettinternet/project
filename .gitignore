@@ -1,5 +1,7 @@
 # Env vars
 .env
+.env.local
+.env.*.local
 
 # Container
 docker/data
