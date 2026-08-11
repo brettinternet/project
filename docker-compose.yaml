@@ -3,7 +3,6 @@
 x-options: &options
   tty: true
   networks: [default]
-  env_file: .env
   environment: &environment
     TZ: "${TIMEZONE:-America/Denver}"
   deploy: &deploy

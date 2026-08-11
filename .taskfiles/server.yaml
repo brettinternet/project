@@ -5,6 +5,9 @@ version: "3"
 vars:
   PORT: 3001
 
+env:
+  COMPOSE_DISABLE_ENV_FILE: "1"
+
 tasks:
   init:
     desc: Initialize
@@ -14,7 +17,7 @@ tasks:
   setup:
     desc: Setup server
     cmds:
-      - docker-compose pull
+      - mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose pull
       # FIXME:
       - echo "Add setup here"
 
@@ -57,23 +60,23 @@ tasks:
 
   compose:build:
     desc: Build Docker Compose server
-    cmd: docker-compose --profile server build
+    cmd: mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose --profile server build
 
   compose:up:
     aliases: [compose:start, compose:run]
     desc: Run Docker Compose server
-    cmd: docker-compose --profile server up -d --force-recreate{{if .CLI_FORCE}} --build{{end}}
+    cmd: mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose --profile server up -d --force-recreate{{if .CLI_FORCE}} --build{{end}}
 
   compose:down:
     desc: Down Docker Compose server
-    cmd: docker-compose --profile server down
+    cmd: mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose --profile server down
 
   compose:services:
     aliases: [compose:services:up]
     desc: Start services
-    cmd: docker-compose --profile services up -d{{if .CLI_FORCE}} --force-recreate{{end}}
+    cmd: mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose --profile services up -d{{if .CLI_FORCE}} --force-recreate{{end}}
 
   compose:services:down:
     desc: Start services
     cmds:
-      - docker-compose --profile services down
+      - mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose --profile services down

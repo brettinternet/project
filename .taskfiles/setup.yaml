@@ -8,7 +8,6 @@ tasks:
     cmds:
       - task: mise
       - task: env:init
-      - task: direnv
       - task: lefthook
 
   mise:
@@ -23,17 +22,8 @@ tasks:
   env:init:
     desc: Create and validate local environment files
     cmds:
-      - task: create-env-file
       - task: create-env-local-file
       - task: env:check
-
-  create-env-file:
-    internal: true
-    desc: Create non-secret local environment file
-    cmds:
-      - cp .env.schema .env
-    status:
-      - test -f .env
 
   create-env-local-file:
     internal: true
@@ -44,7 +34,7 @@ tasks:
 
   env:check:
     desc: Validate and resolve the Varlock environment
-    cmd: mise exec varlock -- varlock load --show-all
+    cmd: mise exec varlock -- varlock load -p .env.schema -p .env.local --show-all
 
   env:encrypt:
     desc: Encrypt one value for use in .env.local
@@ -52,21 +42,11 @@ tasks:
 
   env:run:
     desc: Run a command with scoped Varlock environment values
-    cmd: mise exec varlock -- varlock run -- {{.CLI_ARGS}}
+    cmd: mise exec varlock -- varlock run -p .env.schema -p .env.local -- {{.CLI_ARGS}}
 
   env:lock:
     desc: Lock the Varlock local encryption session
     cmd: mise exec varlock -- varlock lock
-
-  direnv:
-    desc: Run direnv hooks
-    cmd: direnv allow .
-    status:
-      - "[[ $(direnv status --json | jq '.state.foundRC.allowed') == 0 ]]"
-      - "[[ $(direnv status --json | jq '.state.loadedRC.allowed') == 0 ]]"
-    preconditions:
-      - command -v direnv
-      - test -f .envrc
 
   lefthook:
     desc: Install Lefthook

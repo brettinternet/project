@@ -3,8 +3,6 @@ varlock = "github:dmno-dev/varlock"
 
 [tools]
 bun = "latest"
-direnv = "latest"
-dotenvx = "latest"
 varlock = { version = "latest", version_prefix = "varlock@" }
 prettier = "latest"
 gitleaks = "latest"

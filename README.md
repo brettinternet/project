@@ -5,9 +5,7 @@
 - mise
 - Taskfile
 - docker
-- .env
 - Varlock
-- direnv
 - lefthook
 - Prettier
 - cao
@@ -23,19 +21,20 @@ Initialize and setup dependencies.
 task init
 ```
 
-Use the ecosystem-standard environment file names; do not create
-`.env.public` or `.env.secret`. Sensitivity is declared per variable in the
-schema rather than implied by a filename.
+Use Varlock's standard two-file model. Sensitivity is declared per variable in
+the schema rather than implied by a filename.
 
 | File          | Git       | Purpose                                                    |
 | ------------- | --------- | ---------------------------------------------------------- |
 | `.env.schema` | committed | Varlock contract, validation, and non-secret defaults      |
-| `.env`        | ignored   | Non-secret local values for dotenv-compatible tools        |
 | `.env.local`  | ignored   | Local overrides and device-bound encrypted secret payloads |
 
-`task init` creates both ignored files and validates the resolved environment.
-Direnv and Task load only `.env`; use `varlock run` to expose `.env.local`
-secrets only to the command that needs them.
+`task init` creates `.env.local` without overwriting it and validates the
+resolved environment. Project tasks do not load `.env` or `.env.local` into
+their own process. Environment-dependent tasks, including Docker Compose,
+resolve only `.env.schema` and `.env.local` through explicit `varlock run`
+paths; Compose's implicit `.env` loading is disabled. `.env` remains ignored
+only as a safeguard for legacy tooling.
 
 Declare each secret in `.env.schema`:
 
@@ -56,19 +55,30 @@ task setup:env:check
 
 Varlock replaces the prompt with a device-bound encrypted payload. To encrypt
 one value manually, run `task setup:env:encrypt` and paste the generated
-reference into `.env.local`. Run secret-bearing commands without exporting
-secrets into the development shell:
+reference into `.env.local`. Compose tasks already use `varlock run`; use the
+generic wrapper for other secret-bearing commands:
 
 ```sh
 # Interactively encrypt one value
 task setup:env:encrypt
-task setup:env:run -- task compose:up
+task compose:up
+task setup:env:run -- some-command
 task setup:env:lock
 ```
 
 The pre-commit gate combines Gitleaks' generic detection with
 `varlock scan --staged`, which checks staged files for configured secret
 values. On macOS, resolving locally encrypted values may request Touch ID.
+
+Compose does not pass arbitrary parent variables into containers. Map each
+required value explicitly to only the service that needs it:
+
+```yaml
+services:
+    app:
+        environment:
+            API_KEY: "${API_KEY}"
+```
 
 ### Checks
 
@@ -108,10 +118,11 @@ this template on a new project.
 
 #### DNS
 
-Replace `${DOMAIN}` with the value of the local domain, such as `example.arpa`.
+The configured local domain defaults to `example.arpa`. Substitute your
+`.env.local` override in the examples below when using a different value.
 
 <details>
-<summary>Setup local DNS for ${DOMAIN} to point to 127.0.0.1.</summary>
+<summary>Setup local DNS for the configured domain to point to 127.0.0.1.</summary>
 
 ##### dnsmasq
 
@@ -125,7 +136,7 @@ sudo vim $(brew --prefix)/etc/dnsmasq.conf
 
 ```conf
 # /opt/homebrew/etc/dnsmasq.conf or /etc/dnsmasq.conf
-address=/${DOMAIN}/127.0.0.1
+address=/example.arpa/127.0.0.1
 resolv-file=/etc/resolver/arpa
 port=53
 ```
@@ -158,4 +169,9 @@ To run the demo locally, clone the repository and start the containers locally.
 task up
 ```
 
-Navigate to http://${DOMAIN}
+Open the configured domain (default: http://example.arpa). To inspect a local
+override:
+
+```sh
+task setup:env:run -- printenv DOMAIN
+```
