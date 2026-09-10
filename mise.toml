@@ -1,3 +1,12 @@
+#:schema https://mise.en.dev/schema/mise.json
+
+[hooks]
+enter = [
+  { shell = "bash", script = "command -v hum >/dev/null && source <(hum completion bash)" },
+  { shell = "zsh", script = "command -v hum >/dev/null && source <(hum completion zsh)" },
+  { shell = "fish", script = "type -q hum; and hum completion fish | source" },
+]
+
 [tool_alias]
 varlock = "github:dmno-dev/varlock"
 
@@ -10,6 +19,7 @@ jq = "latest"
 lefthook = "latest"
 task = "latest"
 uv = "latest"
+"github:brettinternet/hum" = "latest"
 
 # Backlog.md is the committed work queue the CAO pattern in cao/ drives. Pinned
 # because cao/scripts/tracker.sh depends on its `--json` task/list shapes.
