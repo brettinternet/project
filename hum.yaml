@@ -1,0 +1,10 @@
+# hum init did not generate a process entry: no candidate was detected.
+# No detected candidates.
+# Add a process entry below; replace the example command with your own.
+# Example:
+#   "dev":
+#     argv:
+#       - "command"
+#     # restart: on-failure
+version: 1
+processes: {}
