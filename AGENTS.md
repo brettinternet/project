@@ -11,23 +11,6 @@
 - Run `task check` only for cross-project changes, before a release, or when explicitly requested.
 - Run relevant project-specific checks when they exist.
 
-## Backlog and the CAO loop
-
-- `backlog/` is the only project task queue. Task files are provider-owned: read and mutate them
-  with the `backlog` CLI, and in orchestration only through `cao/scripts/tracker.sh`. Never edit task
-  Markdown directly and never create a second queue beside it.
-- `task backlog` shows the queue, `task cao:next` shows the next dependency-ready task, and
-  `task standup` shows what landed, what is blocked, and what needs the owner.
-- `task ci` is the gate every task must pass before it is `Done`.
-- A task is only ready when its outcome, scope, non-goals, and modified-file contract are explicit
-  and each acceptance criterion names a locally executable command and its expected result. Code
-  presence, future CI, and "should work" are not evidence.
-- `human`, `device`, `credential`, and `deferred` are owner-only labels; `blocked` requires a
-  confirmed external prerequisite; `escalated` means a workflow gave up. Never edit a protected gate
-  file unless the owner labelled the task `tooling`.
-- Never skip, delete, or weaken a test to make the gate green. Stop and escalate instead.
-- `cao/README.md` documents the loop, its safeguards, and what to change for a new project.
-
 ## Git and GitHub
 
 - Agent-created branches MUST be created as worktrees under `.worktrees/`; do not create branches in the primary checkout.

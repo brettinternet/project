@@ -1,6 +1,1 @@
 client/
-
-# Provider-owned: Backlog.md writes these files and reformatting them fights the
-# CLI. CAO runtime state is machine-local.
-backlog/
-.cao/
