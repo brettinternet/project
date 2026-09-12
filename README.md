@@ -1,47 +1,54 @@
 # Project
 
-## Features
+A local development template built with Docker Compose, Bun, mise, Task,
+Varlock, Lefthook, and Prettier.
 
-- mise
-- Taskfile
-- docker
-- Varlock
-- lefthook
-- Prettier
+## Quick start
 
-## Usage
-
-### Setup
-
-Initialize and setup dependencies.
+Install [mise](https://mise.jdx.dev/), then run:
 
 ```sh
 task init
+task compose:services
 ```
 
-Use Varlock's standard two-file model. Sensitivity is declared per variable in
-the schema rather than implied by a filename.
+Open:
 
-| File          | Git       | Purpose                                                    |
-| ------------- | --------- | ---------------------------------------------------------- |
-| `.env.schema` | committed | Varlock contract, validation, and non-secret defaults      |
-| `.env.local`  | ignored   | Local overrides and device-bound encrypted secret payloads |
+- `http://pgadmin.example.arpa`
+- `http://traefik.example.arpa`
 
-`task init` creates `.env.local` without overwriting it and validates the
-resolved environment. Project tasks do not load `.env` or `.env.local` into
-their own process. Environment-dependent tasks, including Docker Compose,
-resolve only `.env.schema` and `.env.local` through explicit `varlock run`
-paths; Compose's implicit `.env` loading is disabled. `.env` remains ignored
-only as a safeguard for legacy tooling.
+Stop the services with:
 
-Declare each secret in `.env.schema`:
+```sh
+task compose:services:down
+```
+
+> [!WARNING]
+> This Compose setup is for local development. It publishes PostgreSQL and an
+> unauthenticated Traefik dashboard, uses predictable fallback passwords, and
+> logs SQL statements. Do not expose it to an untrusted network or deploy it as
+> written.
+
+## Environment
+
+Varlock resolves committed defaults and ignored local overrides:
+
+| File          | Git       | Contents                                  |
+| ------------- | --------- | ----------------------------------------- |
+| `.env.schema` | committed | Variable contract and non-secret defaults |
+| `.env.local`  | ignored   | Local overrides and encrypted secrets     |
+
+`task init` creates `.env.local` if needed and validates the resolved values.
+Compose reads only these Varlock paths; its implicit `.env` loading is disabled.
+
+Declare a secret in `.env.schema`:
 
 ```dotenv
 # @sensitive @required
 API_KEY=
 ```
 
-Then add a prompt resolver to `.env.local` and resolve it:
+Prompt for and encrypt its local value in `.env.local`:
 
 ```dotenv
 API_KEY=varlock(prompt)
@@ -51,25 +58,13 @@ API_KEY=varlock(prompt)
 task setup:env:check
 ```
 
-Varlock replaces the prompt with a device-bound encrypted payload. To encrypt
-one value manually, run `task setup:env:encrypt` and paste the generated
-reference into `.env.local`. Compose tasks already use `varlock run`; use the
-generic wrapper for other secret-bearing commands:
+Run other commands with the resolved environment:
 
 ```sh
-# Interactively encrypt one value
-task setup:env:encrypt
-task compose:up
 task setup:env:run -- some-command
-task setup:env:lock
 ```
 
-The pre-commit gate combines Gitleaks' generic detection with
-`varlock scan --staged`, which checks staged files for configured secret
-values. On macOS, resolving locally encrypted values may request Touch ID.
-
-Compose does not pass arbitrary parent variables into containers. Map each
-required value explicitly to only the service that needs it:
+Map each required value only to the service that uses it:
 
 ```yaml
 services:
@@ -78,72 +73,47 @@ services:
             API_KEY: "${API_KEY}"
 ```
 
-### Checks
-
-Run the staged pre-commit gate before committing:
+Useful environment tasks:
 
 ```sh
-task check:staged
+task setup:env:encrypt # Encrypt one value manually
+task setup:env:lock    # Lock the local encryption session
 ```
 
-`task check` runs the full project check suite.
+The pre-commit hook runs Gitleaks and `varlock scan --staged`. On macOS,
+unlocking local values may request Touch ID.
 
-#### DNS
-
-The configured local domain defaults to `example.arpa`. Substitute your
-`.env.local` override in the examples below when using a different value.
-
-<details>
-<summary>Setup local DNS for the configured domain to point to 127.0.0.1.</summary>
-
-##### dnsmasq
-
-Install `dnsmasq`.
-
-Ensure development DNS works by first editing `dnsmasq.conf`.
+## Checks
 
 ```sh
-sudo vim $(brew --prefix)/etc/dnsmasq.conf
+task check:staged # Check staged files before committing
+task check        # Run every project check
 ```
+
+## Local DNS
+
+The default domain is `example.arpa`. To route it to `127.0.0.1` on macOS,
+install `dnsmasq` and add this entry to its configuration:
 
 ```conf
 # /opt/homebrew/etc/dnsmasq.conf or /etc/dnsmasq.conf
 address=/example.arpa/127.0.0.1
-resolv-file=/etc/resolver/arpa
-port=53
 ```
 
-Then, add the resolver:
+Add the macOS resolver:
 
 ```sh
-mkdir -v /etc/resolver
-sudo vim /etc/resolver/arpa
-```
-
-```sh
-# /etc/resolver/arpa
+sudo mkdir -p /etc/resolver
+sudo tee /etc/resolver/arpa >/dev/null <<'EOF'
 nameserver 127.0.0.1
+EOF
+brew services start dnsmasq
 ```
 
-```sh
-sudo brew services start dnsmasq
-```
+For a different domain, update `.env.local`, the `dnsmasq` entry, and the
+resolver filename.
 
-See also: https://gist.github.com/ogrrd/5831371
+## License
 
-</details>
-
-### Run
-
-To run the demo locally, clone the repository and start the containers locally.
-
-```sh
-task up
-```
-
-Open the configured domain (default: http://example.arpa). To inspect a local
-override:
-
-```sh
-task setup:env:run -- printenv DOMAIN
-```
+No license is provided. Public visibility does not grant permission to use,
+modify, or distribute this code.
