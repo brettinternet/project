@@ -17,9 +17,9 @@ prettier = "latest"
 gitleaks = "latest"
 lefthook = "latest"
 task = "latest"
-worktrunk = "0.77.0"
+worktrunk = "latest"
 "github:brettinternet/hum" = "latest"
+"github:brettinternet/worklease" = "latest"
 
 [settings]
-disable_backends = ["asdf"]
-npm.bun = true
+npm.package_manager = "bun"
