@@ -17,7 +17,7 @@ tasks:
   setup:
     desc: Setup server
     cmds:
-      - mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose pull
+      - "{{.ENV_RUN}} -- docker compose pull"
       # FIXME:
       - echo "Add setup here"
 
@@ -60,23 +60,31 @@ tasks:
 
   compose:build:
     desc: Build Docker Compose server
-    cmd: mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose --profile server build
+    cmd: "{{.ENV_RUN}} -- docker compose --profile server build"
 
   compose:up:
     aliases: [compose:start, compose:run]
     desc: Run Docker Compose server
-    cmd: mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose --profile server up -d --force-recreate{{if .CLI_FORCE}} --build{{end}}
+    cmd: "{{.ENV_RUN}} -- docker compose --profile server up -d --force-recreate{{if .CLI_FORCE}} --build{{end}}"
 
   compose:down:
     desc: Down Docker Compose server
-    cmd: mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose --profile server down
+    cmd: "{{.ENV_RUN}} -- docker compose --profile server down"
 
   compose:services:
     aliases: [compose:services:up]
     desc: Start services
-    cmd: mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose --profile services up -d{{if .CLI_FORCE}} --force-recreate{{end}}
+    cmd: "{{.ENV_RUN}} -- docker compose --profile services up -d{{if .CLI_FORCE}} --force-recreate{{end}}"
+
+  compose:foreground:
+    desc: Supervise this checkout's Compose services through Hum
+    cmd: "{{.ENV_RUN}} -- bash scripts/compose-foreground.sh"
+
+  compose:ready:
+    desc: Check this checkout's Compose services without starting them
+    cmd: "{{.ENV_RUN}} -- bun scripts/compose-ready.ts"
 
   compose:services:down:
     desc: Start services
     cmds:
-      - mise exec varlock -- varlock run -p .env.schema -p .env.local -- docker-compose --profile services down
+      - "{{.ENV_RUN}} -- docker compose --profile services down"

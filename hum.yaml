@@ -1,10 +1,17 @@
-# hum init did not generate a process entry: no candidate was detected.
-# No detected candidates.
-# Add a process entry below; replace the example command with your own.
-# Example:
-#   "dev":
-#     argv:
-#       - "command"
-#     # restart: on-failure
+# yaml-language-server: $schema=https://raw.githubusercontent.com/brettinternet/hum/main/hum.schema.json
 version: 1
-processes: {}
+processes:
+  services:
+    argv: [mise, exec, --, task, server:compose:foreground]
+    stop_grace: 30s
+    ready:
+      exec: [mise, exec, --, task, server:compose:ready]
+      interval: 1s
+      timeout: 180s
+  app:
+    argv: [mise, exec, --, task, app:start]
+    after: [services]
+    ready:
+      exec: [mise, exec, --, task, app:ready]
+      interval: 1s
+      timeout: 30s

@@ -1,0 +1,4 @@
+# Copy-on-write on supported filesystems; full-copy fallback elsewhere.
+/client/node_modules/
+
+# No .env*, secrets, container data, PID files, build output, or test results.

@@ -1,0 +1,17 @@
+# Ordered, blocking setup: never hand an agent a half-prepared checkout.
+[[pre-start]]
+tools = "mise trust && mise install"
+
+[[pre-start]]
+dependencies = "mise exec -- wt step copy-ignored --require-include"
+
+[[pre-start]]
+setup = "mise exec -- task setup:worktree"
+
+[pre-remove]
+hum = "mise exec -- hum --project {{ worktree_path }} down"
+
+[aliases]
+# Read-only: the primary stack runs primary-checkout code, not branch edits.
+shared = "mise exec -- hum --project {{ primary_worktree_path }} status"
+up = "mise exec -- hum --project {{ worktree_path }} up --detach"

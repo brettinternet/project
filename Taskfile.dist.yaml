@@ -2,6 +2,15 @@
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: "3"
 
+vars:
+  # Varlock normally gives ambient env priority. Drop routing/identity inherited
+  # from another checkout; local files are authoritative for these values.
+  ENV_RUN: >-
+    env -u DOMAIN -u COMPOSE_PROJECT_NAME -u APP_PORT -u TRAEFIK_PORT -u POSTGRES_PORT
+    COMPOSE_DISABLE_ENV_FILE=1 mise exec varlock -- varlock run
+    -p "{{.ROOT_DIR}}/.env.schema" -p "{{.ROOT_DIR}}/.env.local"
+    -p "{{.ROOT_DIR}}/.env.worktree.local"
+
 includes:
   setup: .taskfiles/setup.yaml
   server: .taskfiles/server.yaml
@@ -49,6 +58,23 @@ tasks:
     deps:
       - task: server:test
       - task: client:test
+    cmds:
+      - task: test:worktree
+
+  test:worktree:
+    desc: Verify worktree setup, readiness, and port isolation
+    cmd: mise exec bun -- bun test scripts
+
+  app:start:
+    desc: Run the example application (normally started by Hum)
+    cmd: >-
+      {{.ENV_RUN}} -- bun scripts/dev-server.ts
+
+  app:ready:
+    desc: Probe this checkout's example application
+    cmd: >-
+      {{.ENV_RUN}} -- bun -e 'const response = await fetch(`http://127.0.0.1:${process.env.APP_PORT}/readyz`,
+      { signal: AbortSignal.timeout(2000) }); process.exit(response.ok ? 0 : 1)'
 
   compose:up:
     aliases: [up]

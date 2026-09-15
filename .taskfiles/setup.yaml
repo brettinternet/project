@@ -19,22 +19,22 @@ tasks:
       - sh: command -v mise
         msg: Mise is not installed
 
-  env:init:
-    desc: Create and validate local environment files
+  worktree:
+    desc: Prepare a checkout without starting or changing any stack
     cmds:
-      - task: create-env-local-file
-      - task: env:check
+      - task: env:init
+      - task: :client:setup
+      - task: lefthook
 
-  create-env-local-file:
-    internal: true
+  env:init:
+    desc: Create local overrides and a stable worktree identity, then validate
     cmds:
-      - touch .env.local
-    status:
-      - test -f .env.local
+      - mise exec bun -- bun scripts/worktree-env.ts
+      - task: env:check
 
   env:check:
     desc: Validate and resolve the Varlock environment
-    cmd: mise exec varlock -- varlock load -p .env.schema -p .env.local --show-all
+    cmd: '{{.ENV_RUN}} -- bun -e ''console.log("Environment valid")'''
 
   env:encrypt:
     desc: Encrypt one value for use in .env.local
@@ -42,7 +42,7 @@ tasks:
 
   env:run:
     desc: Run a command with scoped Varlock environment values
-    cmd: mise exec varlock -- varlock run -p .env.schema -p .env.local -- {{.CLI_ARGS}}
+    cmd: "{{.ENV_RUN}} -- {{.CLI_ARGS}}"
 
   env:lock:
     desc: Lock the Varlock local encryption session

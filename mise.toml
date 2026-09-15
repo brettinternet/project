@@ -17,6 +17,7 @@ prettier = "latest"
 gitleaks = "latest"
 lefthook = "latest"
 task = "latest"
+worktrunk = "0.77.0"
 "github:brettinternet/hum" = "latest"
 
 [settings]

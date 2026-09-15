@@ -13,7 +13,7 @@ tasks:
 
   setup:
     desc: Setup the project client
-    cmd: bun install
+    cmd: bun install --frozen-lockfile
 
   setup-ci:
     desc: Setup the project client in CI
