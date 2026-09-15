@@ -29,5 +29,17 @@ if (import.meta.main) {
     .split("\n")
     .filter(Boolean)
     .flatMap((line) => JSON.parse(line));
-  process.exit(servicesReady(required, containers) ? 0 : 1);
+  if (!servicesReady(required, containers)) process.exit(1);
+  // A healthy proxy can still have a broken Docker provider and serve only 404s.
+  for (const [host, path] of [
+    ["pgadmin", "/misc/ping"],
+    ["traefik", "/dashboard/"],
+  ]) {
+    const response = await fetch(`http://127.0.0.1:${process.env.TRAEFIK_PORT}${path}`, {
+      headers: { Host: `${host}.${process.env.DOMAIN}` },
+      signal: AbortSignal.timeout(2000),
+    });
+    await response.body?.cancel();
+    if (!response.ok) process.exit(1);
+  }
 }

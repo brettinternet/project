@@ -168,8 +168,8 @@ investigation or checks against existing behavior; do not treat it as verificati
 of branch changes. `wt up` uses Hum's idempotent `up --detach`: existing processes
 are retained. Each isolated stack has a separate Compose project, data directory,
 Traefik routing scope, and loopback ports. PostgreSQL, Traefik, and pgAdmin must all
-pass their health checks before Hum starts the application and probes its HTTP
-readiness endpoint.
+pass their health checks, and pgAdmin/dashboard routes must answer through Traefik,
+before Hum starts the application and probes its HTTP readiness endpoint.
 
 Find a worktree's local app port without displaying secrets:
 

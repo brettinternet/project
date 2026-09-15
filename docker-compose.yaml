@@ -14,7 +14,7 @@ name: ${COMPOSE_PROJECT_NAME:-project}
 services:
   traefik:
     <<: *options
-    image: traefik:v3.5
+    image: traefik:v3.7
     profiles: [services]
     command:
       - --log.level=INFO
