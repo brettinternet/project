@@ -69,7 +69,7 @@ test("Task/Varlock ignores inherited routing and scopes Compose to the worktree"
       "--",
       "bun",
       "-e",
-      "console.log(JSON.stringify({project:process.env.COMPOSE_PROJECT_NAME,port:process.env.APP_PORT,domain:process.env.DOMAIN}))",
+      "console.log(JSON.stringify({project:process.env.COMPOSE_PROJECT_NAME,port:process.env.APP_PORT,domain:process.env.DOMAIN,composeFile:process.env.COMPOSE_FILE,envFiles:process.env.COMPOSE_ENV_FILES,profiles:process.env.COMPOSE_PROFILES}))",
     ],
     {
       env: {
@@ -78,6 +78,9 @@ test("Task/Varlock ignores inherited routing and scopes Compose to the worktree"
         COMPOSE_PROJECT_NAME: "primary-do-not-touch",
         APP_PORT: "1",
         DOMAIN: "primary.invalid",
+        COMPOSE_FILE: "/primary/do-not-use.yaml",
+        COMPOSE_ENV_FILES: "/primary/do-not-use.env",
+        COMPOSE_PROFILES: "production",
       },
       encoding: "utf8",
     },
@@ -87,6 +90,9 @@ test("Task/Varlock ignores inherited routing and scopes Compose to the worktree"
   expect(generated).toContain(`COMPOSE_PROJECT_NAME=${actual.project}\n`);
   expect(generated).toContain(`APP_PORT=${actual.port}\n`);
   expect(actual.domain).not.toBe("primary.invalid");
+  expect(actual.composeFile).toBe(join(right, "docker-compose.yaml"));
+  expect(actual.envFiles).toBeUndefined();
+  expect(actual.profiles).toBeUndefined();
 });
 
 test("the example server fails rather than choosing another port", async () => {
@@ -116,6 +122,7 @@ test("the example server fails rather than choosing another port", async () => {
 test("readiness rejects missing, exited, unhealthy, and partially healthy services", () => {
   expect(servicesReady([], [])).toBe(false);
   expect(servicesReady(["db"], [])).toBe(false);
+  expect(servicesReady(["db"], [{ Service: "db", State: "running" }])).toBe(false);
   expect(servicesReady(["db"], [{ Service: "db", State: "exited" }])).toBe(false);
   expect(servicesReady(["db"], [{ Service: "db", State: "running", Health: "starting" }])).toBe(
     false,
@@ -134,7 +141,7 @@ test("readiness rejects missing, exited, unhealthy, and partially healthy servic
       ["db", "web"],
       [
         { Service: "db", State: "running", Health: "healthy" },
-        { Service: "web", State: "running" },
+        { Service: "web", State: "running", Health: "healthy" },
       ],
     ),
   ).toBe(true);

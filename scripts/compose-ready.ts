@@ -10,8 +10,7 @@ export function servicesReady(required: string[], containers: Container[]): bool
       return (
         instances.length > 0 &&
         instances.every(
-          (container) =>
-            container.State === "running" && (!container.Health || container.Health === "healthy"),
+          (container) => container.State === "running" && container.Health === "healthy",
         )
       );
     })

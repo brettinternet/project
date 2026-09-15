@@ -7,7 +7,9 @@ vars:
   # from another checkout; local files are authoritative for these values.
   ENV_RUN: >-
     env -u DOMAIN -u COMPOSE_PROJECT_NAME -u APP_PORT -u TRAEFIK_PORT -u POSTGRES_PORT
-    COMPOSE_DISABLE_ENV_FILE=1 mise exec varlock -- varlock run
+    -u COMPOSE_ENV_FILES -u COMPOSE_PROFILES
+    COMPOSE_DISABLE_ENV_FILE=1 COMPOSE_FILE="{{.ROOT_DIR}}/docker-compose.yaml"
+    mise exec varlock -- varlock run
     -p "{{.ROOT_DIR}}/.env.schema" -p "{{.ROOT_DIR}}/.env.local"
     -p "{{.ROOT_DIR}}/.env.worktree.local"
 

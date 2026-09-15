@@ -19,12 +19,18 @@ services:
     command:
       - --log.level=INFO
       - --api.insecure=true
+      - --ping=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.constraints=Label(`local.stack`,`${COMPOSE_PROJECT_NAME:-project}`)
       - --providers.file.directory=/etc/traefik
       - --providers.file.watch=true
       - --entrypoints.web.address=:80
+    healthcheck:
+      test: [CMD, traefik, healthcheck, --ping]
+      interval: 1s
+      timeout: 5s
+      retries: 60
     extra_hosts:
       - host.docker.internal:host-gateway
     ports:
@@ -65,7 +71,17 @@ services:
   pgadmin:
     <<: *options
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - /venv/bin/python3
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1/misc/ping', timeout=2).close()"
+      interval: 2s
+      timeout: 5s
+      retries: 60
     image: dpage/pgadmin4:latest
     profiles: [services]
     environment:

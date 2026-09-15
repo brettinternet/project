@@ -53,7 +53,8 @@ three separate ports. Repeated setup preserves edits to both local files.
 
 Task's `ENV_RUN` is the single environment entrypoint for applications and Compose.
 It loads these three Varlock paths in order, with worktree values last, and clears
-ambient routing/identity variables inherited from another checkout. Change these
+ambient routing/identity variables inherited from another checkout. It also pins
+Compose to this checkout's file and ignores inherited Compose file/profile settings. Change these
 values in the local files, not with shell exports. Secrets can still be supplied
 through Varlock's normal mechanisms. Compose's implicit `.env` loading is disabled.
 
@@ -166,8 +167,9 @@ The primary stack runs **primary-checkout code**, not worktree edits. Use it for
 investigation or checks against existing behavior; do not treat it as verification
 of branch changes. `wt up` uses Hum's idempotent `up --detach`: existing processes
 are retained. Each isolated stack has a separate Compose project, data directory,
-Traefik routing scope, and loopback ports. PostgreSQL health gates startup, followed
-by the application's HTTP readiness probe.
+Traefik routing scope, and loopback ports. PostgreSQL, Traefik, and pgAdmin must all
+pass their health checks before Hum starts the application and probes its HTTP
+readiness endpoint.
 
 Find a worktree's local app port without displaying secrets:
 
@@ -193,7 +195,8 @@ The blocking pre-remove hook runs project-scoped `hum down` before deleting the
 checkout. It never stops the primary stack. Close the corresponding Herdr workspace
 separately after checking its panes. Avoid raw Git removal: it skips these hooks.
 
-`hum down` preserves container data while the checkout exists. **Removing the
+`hum down` removes this stack's containers/network but preserves its bind-mounted
+data while the checkout exists. **Removing the
 worktree also removes its ignored `docker/data` directory.** Export any data you
 need before removal. The example keeps the Git branch with `--no-delete-branch`.
 
@@ -208,7 +211,8 @@ certificates, Python virtual environments, or running-service state.
 ### Adapt the example
 
 - Replace `scripts/dev-server.ts` / `app:start` with your application command.
-- Keep an executable readiness probe in `hum.yaml`.
+- Keep an executable readiness probe in `hum.yaml` and a health check on every
+  Compose service; missing container health is not treated as readiness.
 - Extend `.env.schema` and `scripts/worktree-env.ts` with your required namespaces.
 - Add language-specific dependency setup to `setup:worktree`; keep it non-starting.
 - Retain one writer per checkout. Worktrees do not prevent merge conflicts.
