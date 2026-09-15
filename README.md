@@ -213,6 +213,8 @@ certificates, Python virtual environments, or running-service state.
 - Replace `scripts/dev-server.ts` / `app:start` with your application command.
 - Keep an executable readiness probe in `hum.yaml` and a health check on every
   Compose service; missing container health is not treated as readiness.
+- Keep Hum's services command pointed directly at the lifecycle shell, not a
+  Task/Varlock wrapper. The shell must finish Docker cleanup before Hum returns.
 - Extend `.env.schema` and `scripts/worktree-env.ts` with your required namespaces.
 - Add language-specific dependency setup to `setup:worktree`; keep it non-starting.
 - Retain one writer per checkout. Worktrees do not prevent merge conflicts.

@@ -76,9 +76,11 @@ tasks:
     desc: Start services
     cmd: "{{.ENV_RUN}} -- docker compose --profile services up -d{{if .CLI_FORCE}} --force-recreate{{end}}"
 
-  compose:foreground:
-    desc: Supervise this checkout's Compose services through Hum
-    cmd: "{{.ENV_RUN}} -- bash scripts/compose-foreground.sh"
+  compose:wait:
+    cmd: "{{.ENV_RUN}} -- docker compose --profile services up -d --wait --wait-timeout 120"
+
+  compose:logs:
+    cmd: "{{.ENV_RUN}} -- docker compose --profile services logs --follow --no-color"
 
   compose:ready:
     desc: Check this checkout's Compose services without starting them
@@ -87,4 +89,4 @@ tasks:
   compose:services:down:
     desc: Start services
     cmds:
-      - "{{.ENV_RUN}} -- docker compose --profile services down"
+      - "{{.ENV_RUN}} -- docker compose --profile services down --remove-orphans --timeout 10"

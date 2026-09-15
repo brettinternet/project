@@ -1,5 +1,6 @@
 import { afterAll, expect, test } from "bun:test";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
+import { once } from "node:events";
 import {
   cpSync,
   mkdtempSync,
@@ -93,6 +94,61 @@ test("Task/Varlock ignores inherited routing and scopes Compose to the worktree"
   expect(actual.composeFile).toBe(join(right, "docker-compose.yaml"));
   expect(actual.envFiles).toBeUndefined();
   expect(actual.profiles).toBeUndefined();
+});
+
+test("Hum's lifecycle command waits for cleanup after a process-group signal", async () => {
+  const bin = join(fixture, "bin");
+  mkdirSync(bin);
+  const marker = join(fixture, "cleanup-completed");
+  writeFileSync(
+    join(bin, "mise"),
+    `#!/usr/bin/env bash
+set -eu
+case "$*" in
+  *server:compose:wait) exit 0 ;;
+  *server:compose:logs) echo ready; exec sleep 30 ;;
+  *server:compose:services:down) sleep 0.2; printf done > "$LIFECYCLE_MARKER" ;;
+  *) exit 64 ;;
+esac
+`,
+    { mode: 0o755 },
+  );
+  const root = resolve(import.meta.dir, "..");
+  const manifest = Bun.YAML.parse(readFileSync(join(root, "hum.yaml"), "utf8")) as {
+    processes: { services: { argv: string[] } };
+  };
+  const [command, ...args] = manifest.processes.services.argv;
+  const child = spawn(command!, args, {
+    cwd: root,
+    detached: true,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIFECYCLE_MARKER: marker },
+  });
+  const exited = once(child, "exit");
+  const killGroup = () => {
+    try {
+      process.kill(-child.pid!, "SIGKILL");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+    }
+  };
+  const timeout = setTimeout(killGroup, 3000);
+  try {
+    await Promise.race([
+      once(child.stdout!, "data"),
+      exited.then(() => {
+        throw new Error("Lifecycle command exited before readiness");
+      }),
+    ]);
+    process.kill(-child.pid!, "SIGTERM");
+    const [code, signal] = await exited;
+    expect(signal).toBeNull();
+    expect(code).toBe(143);
+    expect(readFileSync(marker, "utf8")).toBe("done");
+  } finally {
+    clearTimeout(timeout);
+    killGroup();
+  }
 });
 
 test("the example server fails rather than choosing another port", async () => {

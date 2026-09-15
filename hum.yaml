@@ -2,7 +2,8 @@
 version: 1
 processes:
   services:
-    argv: [mise, exec, --, task, server:compose:foreground]
+    # Supervise the lifecycle shell directly so Hum waits for its EXIT cleanup.
+    argv: [bash, scripts/compose-foreground.sh]
     stop_grace: 30s
     ready:
       exec: [mise, exec, --, task, server:compose:ready]
