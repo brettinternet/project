@@ -14,7 +14,7 @@ varlock = "github:dmno-dev/varlock"
 bun = "latest"
 varlock = { version = "latest", version_prefix = "varlock@" }
 prettier = "latest"
-gitleaks = "latest"
+betterleaks = "latest"
 lefthook = "latest"
 task = "latest"
 worktrunk = "latest"

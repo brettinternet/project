@@ -97,7 +97,7 @@ task setup:env:encrypt # Encrypt one value manually
 task setup:env:lock    # Lock the local encryption session
 ```
 
-The pre-commit hook runs Gitleaks and `varlock scan --staged`. On macOS,
+The pre-commit hook runs Betterleaks and `varlock scan --staged`. On macOS,
 unlocking local values may request Touch ID.
 
 ## Parallel worktrees

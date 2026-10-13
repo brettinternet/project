@@ -9,6 +9,6 @@ pre-commit:
       exclude:
         - CLAUDE.md
     - name: Check for secret leaks
-      run: mise exec gitleaks -- gitleaks git --pre-commit --redact --staged --verbose --no-banner
+      run: mise exec betterleaks -- betterleaks git --pre-commit --redact --staged --verbose --no-banner
     - name: Check for configured secret values
       run: mise exec varlock -- varlock scan -p .env.schema -p .env.local -p .env.worktree.local --staged
