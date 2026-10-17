@@ -19,6 +19,8 @@ lefthook = "latest"
 task = "latest"
 worktrunk = "latest"
 "github:brettinternet/hum" = "latest"
+"github:brettinternet/noon" = "latest"
+"github:brettinternet/tell" = "latest"
 "github:brettinternet/worklease" = "latest"
 
 [settings]

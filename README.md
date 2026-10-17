@@ -36,6 +36,28 @@ mise exec -- hum down
 > logs SQL statements. Do not expose it to an untrusted network or deploy it as
 > written.
 
+## Scheduled fetch and notifications
+
+`noon.yaml` fetches all Git remotes every 15 minutes without changing the working
+tree. Mise installs Noon and Tell with the other project tools.
+
+```sh
+mise exec -- noon config check
+mise exec -- noon run fetch       # Fetch once now
+mise exec -- noon enable          # Approve background fetching for this checkout
+mise exec -- noon service install # Install/start the per-user scheduler
+```
+
+Background scheduling is opt-in; installing tools alone does not enable it.
+
+`tell.yaml` selects desktop notifications (`osascript` on macOS). Always select
+it explicitly: Tell rejects routing settings in automatically loaded shared config.
+
+```sh
+mise exec -- tell --config tell.yaml doctor
+mise exec -- tell --config tell.yaml notify "Build finished"
+```
+
 ## Environment
 
 Varlock resolves committed defaults and ignored local overrides:

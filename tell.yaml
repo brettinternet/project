@@ -1,0 +1,5 @@
+# Explicit config: tell --config tell.yaml notify "Build finished"
+# Routing is rejected when this file is loaded as automatic shared config.
+version: 1
+notify:
+  via: desktop

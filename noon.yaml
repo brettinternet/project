@@ -1,0 +1,9 @@
+version: 1
+jobs:
+  fetch:
+    description: Fetch remote updates without changing the working tree
+    schedule: every 15m
+    run: [git, fetch, --all]
+    env:
+      GIT_TERMINAL_PROMPT: "0"
+    timeout: 2m
