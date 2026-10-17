@@ -8,6 +8,7 @@ pre-commit:
       run: mise exec prettier -- prettier --check --ignore-unknown -- {staged_files}
       exclude:
         - CLAUDE.md
+        - .pi/mcp.json
     - name: Check for secret leaks
       run: mise exec betterleaks -- betterleaks git --pre-commit --redact --staged --verbose --no-banner
     - name: Check for configured secret values
